@@ -209,7 +209,7 @@ COPY --from=uade-build /usr/local/share/uade /usr/local/share/uade
 WORKDIR /usr/local/lib/uade/
 COPY --from=uade-build /usr/local/lib/uade/ /usr/local/lib/uade/
 RUN ln -s /usr/lib/x86_64-linux-gnu/libao.so.4 /usr/lib/x86_64-linux-gnu/libao.so
-RUN echo -e "default_driver=null \nquiet" > /etc/libao.conf 
+RUN echo "default_driver=null \nquiet" > /etc/libao.conf 
 WORKDIR /root
 
 #
