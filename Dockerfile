@@ -56,6 +56,20 @@ COPY --from=mariadb /usr/local/bin/docker-entrypoint.sh /usr/local/bin/db_entryp
 COPY --from=icecast /usr/local/bin/icecast /usr/local/bin/icecast
 COPY --from=icecast /usr/local/share/icecast /usr/local/share/icecast
 
+FROM debian:bookworm AS uade-build
+USER root
+RUN apt-get update \
+       && apt-get install -y build-essential libsdl2-dev libao-dev git python3.11-venv python3-pip
+RUN git clone https://gitlab.com/uade-music-player/uade
+WORKDIR uade
+RUN python3 -m venv .azuvenv && . .azuvenv/bin/activate && pip install tqdm Pillow
+RUN . .azuvenv/bin/activate && git clone https://gitlab.com/heikkiorsila/bencodetools && cd bencodetools && pip install -r requirements_dev.txt && ./configure \
+   && make && make install
+RUN git clone https://gitlab.com/hors/libzakalwe && cd libzakalwe && ./configure && make && make install
+RUN ./configure && make && make install
+
+
+
 #
 # Final build image
 #
@@ -149,10 +163,24 @@ ENV LANG="en_US.UTF-8" \
     PROFILING_EXTENSION_HTTP_IP_WHITELIST=* \
     ENABLE_WEB_UPDATER="true"
 
+FROM pre-final AS pre-final2
+COPY --from=uade-build /usr/local/bin/uade123 /usr/local/bin/
+COPY --from=uade-build /usr/local/lib/libzakalwe.so /usr/local/lib/libzakalwe.so
+COPY --from=uade-build /usr/local/lib/libbencodetools.so /usr/local/lib/libbencodetools.so
+COPY --from=uade-build /usr/lib/x86_64-linux-gnu/libao.so.4 /usr/lib/x86_64-linux-gnu/
+WORKDIR /usr/local/share/uade
+COPY --from=uade-build /usr/local/share/uade /usr/local/share/uade
+WORKDIR /usr/local/lib/uade/
+COPY --from=uade-build /usr/local/lib/uade/ /usr/local/lib/uade/
+RUN ln -s /usr/lib/x86_64-linux-gnu/libao.so.4 /usr/lib/x86_64-linux-gnu/libao.so
+RUN echo "default_driver=null \nquiet" > /etc/libao.conf
+WORKDIR /root
+
+
 #
 # Development Build
 #
-FROM pre-final AS development
+FROM pre-final2 AS development
 
 # Dev build step
 COPY ./util/docker/common /bd_build/
@@ -188,7 +216,7 @@ CMD ["--no-main-command"]
 #
 # Final build (Just environment vars and squishing the FS)
 #
-FROM pre-final AS final
+FROM pre-final2 AS final
 
 USER azuracast
 
