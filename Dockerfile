@@ -163,6 +163,9 @@ ENV LANG="en_US.UTF-8" \
     PROFILING_EXTENSION_HTTP_IP_WHITELIST=* \
     ENABLE_WEB_UPDATER="true"
 
+#
+# adding uade and changing libao conf
+#
 FROM pre-final AS pre-final2
 COPY --from=uade-build /usr/local/bin/uade123 /usr/local/bin/
 COPY --from=uade-build /usr/local/lib/libzakalwe.so /usr/local/lib/libzakalwe.so
@@ -175,7 +178,6 @@ COPY --from=uade-build /usr/local/lib/uade/ /usr/local/lib/uade/
 RUN ln -s /usr/lib/x86_64-linux-gnu/libao.so.4 /usr/lib/x86_64-linux-gnu/libao.so
 RUN echo "default_driver=null \nquiet" > /etc/libao.conf
 WORKDIR /root
-
 
 #
 # Development Build
@@ -212,19 +214,6 @@ ENV APPLICATION_ENV="development" \
 # Entrypoint and default command
 ENTRYPOINT ["tini", "--", "/usr/local/bin/my_init"]
 CMD ["--no-main-command"]
-
-FROM pre-final AS pre-final2
-COPY --from=uade-build /usr/local/bin/uade123 /usr/local/bin/
-COPY --from=uade-build /usr/local/lib/libzakalwe.so /usr/local/lib/libzakalwe.so
-COPY --from=uade-build /usr/local/lib/libbencodetools.so /usr/local/lib/libbencodetools.so
-COPY --from=uade-build /usr/lib/x86_64-linux-gnu/libao.so.4 /usr/lib/x86_64-linux-gnu/
-WORKDIR /usr/local/share/uade
-COPY --from=uade-build /usr/local/share/uade /usr/local/share/uade
-WORKDIR /usr/local/lib/uade/
-COPY --from=uade-build /usr/local/lib/uade/ /usr/local/lib/uade/
-RUN ln -s /usr/lib/x86_64-linux-gnu/libao.so.4 /usr/lib/x86_64-linux-gnu/libao.so
-RUN echo "default_driver=null \nquiet" > /etc/libao.conf 
-WORKDIR /root
 
 #
 # Final build (Just environment vars and squishing the FS)
