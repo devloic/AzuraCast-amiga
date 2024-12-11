@@ -12,9 +12,11 @@
 
 services:
   web:
-    container_name: azuracast
+    container_name: azuracast-amiga
     #image: "ghcr.io/azuracast/azuracast:${AZURACAST_VERSION:-latest}"
-    image: "devloic/azuracast-amiga"
+    image: "devloic/azuracast-amiga:${AZURACAST_VERSION:-latest}"
+    build: 
+      context: .
     labels:
       - "com.centurylinklabs.watchtower.scope=azuracast"
     # Want to customize the HTTP/S ports? Follow the instructions here:
