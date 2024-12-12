@@ -129,7 +129,6 @@ Utility Functions
 %include "./cache.liq"
 %include "./crossfade.liq"
 %include "./utilities.liq"
-%include "./uade.liq"
 
 # Transport for HTTPS outputs.
 https_transport = http.transport.ssl()
